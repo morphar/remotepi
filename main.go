@@ -34,16 +34,6 @@ func main() {
 	pin := rpio.Pin(17)
 	defer pin.Low()
 
-	// Find all audio card status files (hopefully only 1)
-	matches, err := filepath.Glob("/proc/asound/card0/pcm*/sub*/status")
-	exitOnErr(err)
-
-	if len(matches) != 1 {
-		log.Fatal("For now, this only works with 1 audio card")
-	}
-
-	statusFile := matches[0]
-
 	// Create a couple of amplifier rc commands
 	// onOff := rc5Command(16, 12, 0)
 	// volumeUp := rc5Command(16, 16, 0)
@@ -57,33 +47,54 @@ func main() {
 	// sendSignal(pin, uint(onOff), true)
 
 	// Delays before turning on or off the amplifier
-	offDeleay := 30 * time.Second
-	onDeleay := time.Second
+	offDeleay := 2 * time.Minute
+
+	// Find all audio card status files (hopefully only 1)
+	statusFiles, err := filepath.Glob("/proc/asound/card0/pcm*/sub*/status")
+	exitOnErr(err)
+
+	// if len(matches) != 1 {
+	// 	log.Fatal("For now, this only works with 1 audio card")
+	// }
+
+	// statusFile := matches[0]
 
 	// Setup the check vars
 	var lastOn time.Time
 	var stateOn bool
 
 	for {
-		src, err := os.ReadFile(statusFile)
-		exitOnErr(err)
-
-		if reRunning.Match(src) {
-			lastOn = time.Now()
-			if !stateOn {
-				stateOn = true
-				rc5.Send(pin, turnOn, true)
+		// Find the current state - more specifically: is any cards running?
+		curStateOn := false
+		for _, statusFile := range statusFiles {
+			src, err := os.ReadFile(statusFile)
+			exitOnErr(err)
+			if reRunning.Match(src) {
+				curStateOn = true
+				break
 			}
-			time.Sleep(offDeleay)
+		}
+
+		// cur state is on, update the lastOn timestamp
+		if curStateOn {
+			lastOn = time.Now()
+		}
+
+		// If any card is running and the state is not on: send the ON signal
+		if curStateOn && !stateOn {
+			stateOn = true
+			rc5.Send(pin, turnOn, true)
+			time.Sleep(time.Second)
 			continue
 		}
 
-		if stateOn && time.Since(lastOn) > offDeleay {
+		// If the current state is off and the off delay has passed since last on: send the OFF signal
+		if !curStateOn && time.Since(lastOn) > offDeleay {
 			stateOn = false
 			rc5.Send(pin, turnOff, true)
 		}
 
-		time.Sleep(onDeleay)
+		time.Sleep(time.Second)
 	}
 }
 
