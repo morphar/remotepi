@@ -1,0 +1,15 @@
+So...
+
+Carrier frequenzy... 
+It's basically: "on, off, off, off", repeated 32 times per high half bit.
+
+IR needs the carrier (in theory at least).
+The _working_ir_main.go contains code that works with an IR LED.
+
+RCA Wired Remote Control protocol won't work at all with the carrier.
+The _working_wired_main.go contains code that works with wired protocol.
+It's just the _working_ir_main.go, but with the code for 3/4 silence commented out.
+
+It should be possible to significantly simplify the code,
+if it only needs to support the wired protocol.
+
