@@ -143,8 +143,10 @@ func Send(pin rpio.Pin, bin int, wired bool) {
 	plan.Schedule(n*fullBitDuration, pin.Low)
 	plan.Schedule((n*fullBitDuration)+idleDuration, func() { /* idle */ })
 
-	plan.StartBlocking()
-	plan.StartBlocking()
+	plan.StartTightBlocking()
+	plan.StartTightBlocking()
+	plan.StartTightBlocking()
+	plan.StartTightBlocking()
 }
 
 // RC-5 frame format:
