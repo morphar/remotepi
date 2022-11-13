@@ -89,7 +89,7 @@ func main() {
 		}
 
 		// If the current state is off and the off delay has passed since last on: send the OFF signal
-		if !curStateOn && time.Since(lastOn) > offDeleay {
+		if !curStateOn && stateOn && time.Since(lastOn) > offDeleay {
 			stateOn = false
 			rc5.Send(pin, turnOff, true)
 		}
