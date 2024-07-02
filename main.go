@@ -85,6 +85,8 @@ func main() {
 			stateOn = true
 			rc5.Send(pin, turnOn, true)
 			time.Sleep(time.Second)
+			pin.Input()
+			pin.PullOff()
 			continue
 		}
 
@@ -92,6 +94,8 @@ func main() {
 		if !curStateOn && stateOn && time.Since(lastOn) > offDeleay {
 			stateOn = false
 			rc5.Send(pin, turnOff, true)
+			pin.Input()
+			pin.PullOff()
 		}
 
 		time.Sleep(time.Second)
